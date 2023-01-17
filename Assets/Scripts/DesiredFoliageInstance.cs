@@ -10,4 +10,6 @@ public class DesiredFoliageInstance
     public Quaternion Rotation;
     public float TraceRadius;
     public float Age;
+
+    public ProceduralFoliageVolume ProceduralVolumeBodyInstance;
 }

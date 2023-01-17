@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11f93a52587708c41a50e2d432ecf79a, type: 3}
+  m_Name: ProceduralFoliageSpawner
+  m_EditorClassIdentifier: 
+  _randomSeed: 1
+  _tileSize: 100.01
+  _numUniqueTiles: 10
+  _minimumQuadTreeSize: 1.01
+  _foliageTypeObjects:
+  - {fileID: 11400000, guid: a947c3ca24c220443830b546e4907e1f, type: 2}

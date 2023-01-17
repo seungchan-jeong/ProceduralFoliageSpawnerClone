@@ -11,9 +11,13 @@ public class EdModeFoliage
     public static void AddInstances(List<DesiredFoliageInstance> DesiredInstances,
         in FoliagePaintingGeometryFilter OverrideGeometryFilter)
     {
-        Dictionary<FoliageType, List<DesiredFoliageInstance>> SettingsInstancesMap =
-            DesiredInstances.GroupBy(inst => inst.FoliageType)
-                .ToDictionary(keySelector: g => g.Key, elementSelector: g => g.ToList());
+        //Debug
+        foreach (DesiredFoliageInstance desiredFoliageInstance in DesiredInstances)
+        {
+            DebugDraw.DrawSphere(desiredFoliageInstance.StartTrace, 2.0f, Color.green, 6);
+        }
+        
+        Dictionary<FoliageType, List<DesiredFoliageInstance>> SettingsInstancesMap = DesiredInstances.GroupBy(inst => inst.FoliageType).ToDictionary(keySelector: g => g.Key, elementSelector: g => g.ToList());
 
         foreach (KeyValuePair<FoliageType, List<DesiredFoliageInstance>> KeyValue in SettingsInstancesMap)
         {
@@ -36,7 +40,7 @@ public class EdModeFoliage
         List<PotentialInstance>[] PotentialInstanceBuckets = Enumerable.Range(0, NUM_INSTANCE_BUCKETS)
             .Select((i) => new List<PotentialInstance>()).ToArray();
         CalculatePotentialInstances_ThreadSafe(FoliageType, DesiredInstances, ref PotentialInstanceBuckets, 0,
-            DesiredInstances.Count, OverrideGeometryFilter);
+            DesiredInstances.Count-1, OverrideGeometryFilter);
 
         Dictionary<InstancedFoliageActor, List<FoliageType>> UpdatedTypesByIFA =
             new Dictionary<InstancedFoliageActor, List<FoliageType>>();
@@ -49,18 +53,18 @@ public class EdModeFoliage
 
                 InstancedFoliageActor TargetIFA = InstancedFoliageActor.Get();
 
-                List<FoliageType> UpdateTypes;
-                if (!UpdatedTypesByIFA.TryGetValue(TargetIFA, out UpdateTypes))
-                {
-                    UpdateTypes = new List<FoliageType>();
-                    UpdatedTypesByIFA.Add(TargetIFA, UpdateTypes);
-                }
-
-                if (!UpdateTypes.Contains(PotentialInst.DesiredInstance.FoliageType))
-                {
-                    UpdateTypes.Add(PotentialInst.DesiredInstance.FoliageType);
-                    TargetIFA.AddFoliageType(PotentialInst.DesiredInstance.FoliageType);
-                }
+                // List<FoliageType> UpdateTypes;
+                // if (!UpdatedTypesByIFA.TryGetValue(TargetIFA, out UpdateTypes))
+                // {
+                //     UpdateTypes = new List<FoliageType>();
+                //     UpdatedTypesByIFA.Add(TargetIFA, UpdateTypes);
+                // }
+                //
+                // if (!UpdateTypes.Contains(PotentialInst.DesiredInstance.FoliageType))
+                // {
+                //     UpdateTypes.Add(PotentialInst.DesiredInstance.FoliageType);
+                //     TargetIFA.AddFoliageType(PotentialInst.DesiredInstance.FoliageType);
+                // }
             }
         }
 
@@ -69,6 +73,15 @@ public class EdModeFoliage
         bool bPlacedInstances = false;
         for (int BucketIdx = 0; BucketIdx < NUM_INSTANCE_BUCKETS; BucketIdx++)
         {
+            List<PotentialInstance> PotentialInstances = PotentialInstanceBuckets[BucketIdx];
+            foreach (PotentialInstance PotentialInstance in PotentialInstances)
+            {
+                DesiredFoliageInstance DesiredInstance = PotentialInstance.DesiredInstance;
+
+                //Debug
+                DebugDraw.DrawSphere(PotentialInstance.HitLocation, 2.0f, Color.red, 6);
+            }
+            
             // SpawnFoliageInstance();
         }
 
@@ -119,7 +132,7 @@ public class EdModeFoliage
 
     private static bool CheckLocationForPotentialInstance_ThreadSafe(FoliageType Settings, Vector3 Location, Vector3 Normal)
     {
-        return false;
+        return true;
     }
 
     private static bool VertexMaskCheck()
@@ -131,4 +144,7 @@ public class EdModeFoliage
     {
         return false; 
     }
+    
+    
+    
 }

@@ -16,7 +16,7 @@ public class InstancedFoliageActor
         {
             bool bOutDiscardHit = false;
             bool bOutInsideProceduralVolumeOrArentUsingOne = false;
-            if (!ValidateHit(Hit, out OutHit, FilterFunc, ref bOutDiscardHit, ref bOutInsideProceduralVolumeOrArentUsingOne))
+            if (!ValidateHit(Hit, out OutHit, FilterFunc, DesiredInstance, ref bOutDiscardHit, ref bOutInsideProceduralVolumeOrArentUsingOne))
             {
                 return false;
             }
@@ -40,7 +40,7 @@ public class InstancedFoliageActor
         return false;
     }
 
-    private static bool ValidateHit(RaycastHit Hit, out RaycastHit OutHit, IFoliageTraceFilter FilterFunc, ref bool bOutDiscardHit,
+    private static bool ValidateHit(RaycastHit Hit, out RaycastHit OutHit, IFoliageTraceFilter FilterFunc, DesiredFoliageInstance DesiredInstance, ref bool bOutDiscardHit,
         ref bool bOutInsideProceduralVolumeOrArentUsingOne)
     {
         //Hit가 유효한 Primitive에 충돌한 것인지 확인하는 부분.
@@ -50,6 +50,7 @@ public class InstancedFoliageActor
         
         /*
          * TODO ProceduralFoliageBlockingVolume 부분
+         * TODO ProceduralFoliageVVolume에 RayCast가 hit한 경우를 걸러내는 부분.
          */
 
         if (Hit.transform.gameObject.GetComponent<ProceduralFoliageVolume>() != null)
@@ -65,9 +66,12 @@ public class InstancedFoliageActor
         }
 
         bOutInsideProceduralVolumeOrArentUsingOne = true;
-        /*
-         * TODO 이 Hit Point가 ProceduralVolume 안에 있는지 검증 하는 부분.
-         */
+        if (DesiredInstance.ProceduralVolumeBodyInstance != null)
+        {
+            // We have a procedural volume, so lets make sure we are inside it.
+            bOutInsideProceduralVolumeOrArentUsingOne =
+                DesiredInstance.ProceduralVolumeBodyInstance.OverlapTestWithSphere(Hit.point, 0.01f);
+        }
 
         OutHit = Hit;
         /*
