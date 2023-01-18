@@ -57,7 +57,6 @@ public class ProceduralFoliageSpawner : ScriptableObject
             ProceduralFoliageTile newTile = new ProceduralFoliageTile();
             int randomNumber = GetRandomNumber();
             
-            Debug.Log("Tile Rand : " + randomNumber);
             newTile.Simulate(this, randomNumber, numSteps);
             _precomputedTiles[i] = newTile;
         }
@@ -80,5 +79,35 @@ public class ProceduralFoliageSpawner : ScriptableObject
     private int GetRandomNumber()
     {
         return _randomStream.RandRange(int.MinValue+1, int.MaxValue-1);
+    }
+
+    public ProceduralFoliageTile GetRandomTile(int tileLayoutBottomLeftX, int tileLayoutBottomLeftZ)
+    {
+        if (_precomputedTiles.Length != 0) //TODO Length를 쓰는게 맞는지 모르겠음. (1) _pre..를 List로 바꾸거나 (2) Array로 가되 validation check를 해야할 듯? 
+        {
+            // Random stream to use as a hash function
+            RandomStream HashStream = new RandomStream();	
+		
+            HashStream.Initialize(tileLayoutBottomLeftX);
+            double XRand = HashStream.Rand();
+		
+            HashStream.Initialize(tileLayoutBottomLeftZ);
+            double YRand = HashStream.Rand();
+
+            const int RAND_MAX = 0x7fff; //32767 (stdlib.h)
+            int RandomNumber = (int)(RAND_MAX * XRand / (YRand + 0.01));
+            int Idx = Mathf.Clamp(RandomNumber % _precomputedTiles.Length, 0, _precomputedTiles.Length - 1);
+            return _precomputedTiles[Idx];
+        }
+
+        return null;
+    }
+
+    public ProceduralFoliageTile CreateTempTile()
+    {
+        ProceduralFoliageTile tempTile = new ProceduralFoliageTile();
+        tempTile.InitSimulation(this, 0);
+        
+        return tempTile;
     }
 }

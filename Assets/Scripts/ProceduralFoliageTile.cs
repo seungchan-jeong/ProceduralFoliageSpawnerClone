@@ -24,7 +24,7 @@ public class ProceduralFoliageTile
         RunSimulation(maxNumSteps, false);
         RunSimulation(maxNumSteps, true);
 
-        ShowDebug();
+        // ShowDebug();
     }
 
     private void ShowDebug()
@@ -279,6 +279,117 @@ public class ProceduralFoliageTile
     private void FlushPendingRemovals()
     {
         
+    }
+
+    public void CopyInstancesToTile(ProceduralFoliageTile toTile, Bounds localAABB, Matrix4x4 relativeMat, float tileOverlap)
+    {
+        List<ProceduralFoliageInstance> InstancesIncludingOverlap = new List<ProceduralFoliageInstance>();
+
+        Bounds outerLocalAABB = new Bounds();
+        outerLocalAABB.SetMinMax(localAABB.min, localAABB.max + Vector3.one * tileOverlap);
+
+        GetInstancesInAABB(outerLocalAABB, InstancesIncludingOverlap);
+
+        toTile.AddInstances(InstancesIncludingOverlap, relativeMat, localAABB);
+    }
+
+    private void AddInstances(List<ProceduralFoliageInstance> NewInstances, Matrix4x4 relativeMat, Bounds localAABB)
+    {
+        foreach (ProceduralFoliageInstance Inst in NewInstances)
+        {
+            Vector3 location = Inst.Location;
+            float radius = Inst.GetMaxRadius();
+
+            // Instances in InnerLocalAABB or on the border of the max sides of the AABB will be visible and instantiated by this tile
+            // Instances outside of the InnerLocalAABB are only used for rejection purposes. This is needed for overlapping tiles
+            // The actual instantiation of the object will be taken care of by a different tile
+            bool bIsOutsideInnerLocalAABB = location.x + radius <= localAABB.min.x
+                                                  || location.x - radius > localAABB.max.x
+                                                  || location.y + radius <= localAABB.min.y
+                                                  || location.y - radius > localAABB.max.y;
+
+            Vector3 newLocation = relativeMat.MultiplyPoint(Inst.Location);
+            // ProceduralFoliageInstance newInst = NewSeed(newLocation, Inst.Scale, Inst.Type, Inst.Age,
+            //     bIsOutsideInnerLocalAABB); //TODO 마지막거가 false여야 추가됨.
+            ProceduralFoliageInstance newInst = NewSeed(newLocation, Inst.Scale, Inst.Type, Inst.Age,
+                false);
+            if (newInst != null)
+            {			
+                _instancesSet.Add(newInst);
+            }
+        }
+
+        FlushPendingRemovals();
+    }
+
+    private void GetInstancesInAABB(Bounds outerLocalAABB, List<ProceduralFoliageInstance> OutInstances)
+    {
+        OutInstances.AddRange(_instancesArray);
+        return;
+        
+        //TODO 
+        // TArray<FProceduralFoliageInstance*> InstancesInAABB;
+        // Broadphase.GetInstancesInBox(LocalAABB, InstancesInAABB);
+        //
+        // OutInstances.Reserve(OutInstances.Num() + InstancesInAABB.Num());
+        // for (FProceduralFoliageInstance* Inst : InstancesInAABB)
+        // {
+        //     const float Rad = Inst->GetMaxRadius();
+        //     const FVector& Location = Inst->Location;
+        //
+        //     if (!bFullyContainedOnly || (Location.X - Rad >= LocalAABB.Min.X && Location.X + Rad <= LocalAABB.Max.X && Location.Y - Rad >= LocalAABB.Min.Y && Location.Y + Rad <= LocalAABB.Max.Y))
+        //     {
+        //         OutInstances.Add(Inst);
+        //     }
+        // }
+        //
+        // // Sort the instances by location.
+        // // This protects us from any future modifications made to the broadphase that would impact the order in which instances are located in the AABB.
+        // OutInstances.Sort([](const FProceduralFoliageInstance& A, const FProceduralFoliageInstance& B)
+        // {
+        //     return (B.Location.X == A.Location.X) ? (B.Location.Y > A.Location.Y) : (B.Location.X > A.Location.X);
+        // });
+    }
+
+    public void ExtractDesiredInstances(List<DesiredFoliageInstance> OutInstances, Matrix4x4 WorldTM, Vector3 volumeLocation, float volumeMaxExtent, float HalfHeight, ProceduralFoliageVolume VolumeBodyInstance, bool bEmptyTileInfo)
+    {
+        InstancesToArray();
+        
+        // const FCollisionQueryParams Params(NAME_None, FCollisionQueryParams::GetUnknownStatId(), true);
+        // FHitResult Hit;
+        // 엥 이거 왜있는거야..? 사용도안하는데. 언리얼 PR 각 
+
+        OutInstances.Capacity = _instancesSet.Count;
+        foreach (ProceduralFoliageInstance Instance in _instancesArray)
+        {
+            Vector3 StartRay = Instance.Location + WorldTM.GetPosition();
+            StartRay.y += HalfHeight;
+            Vector3 EndRay = StartRay;
+            EndRay.y -= (HalfHeight * 2.0f + 10.0f);	//add 10cm to bottom position of raycast. This is needed because volume is usually placed directly on geometry and then you get precision issues
+
+            // Apply FoliageType's Falloff
+            // TODO
+            // Vector2 Position = new Vector2(StartRay.x, StartRay.z);
+            // if (Instance.Type.DensityFalloff.IsInstanceFiltered(Position, ActorVolumeLocation, ActorVolumeMaxExtent))
+            // {
+            //     continue;
+            // }
+		
+            DesiredFoliageInstance DesiredInst = new DesiredFoliageInstance(StartRay, EndRay, Instance.Type, Instance.GetMaxRadius());
+            DesiredInst.Rotation = Instance.Rotation;
+            // DesiredInst.ProceduralGuid = ProceduralGuid;
+            DesiredInst.Age = Instance.Age;
+            DesiredInst.ProceduralVolumeBodyInstance = VolumeBodyInstance;
+            // DesiredInst.PlacementMode = EFoliagePlacementMode::Procedural;
+            
+            OutInstances.Add(DesiredInst);
+        }
+
+        if (bEmptyTileInfo)
+        {
+            //TODO
+            // Empty();
+        }
     }
 }
 

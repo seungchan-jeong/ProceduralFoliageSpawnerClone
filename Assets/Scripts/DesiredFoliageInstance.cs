@@ -12,4 +12,17 @@ public class DesiredFoliageInstance
     public float Age;
 
     public ProceduralFoliageVolume ProceduralVolumeBodyInstance;
+
+    public DesiredFoliageInstance()
+    {
+        
+    }
+
+    public DesiredFoliageInstance(Vector3 StartRay, Vector3 EndRay, FoliageType Type, float inTraceRadius)
+    {
+        StartTrace = StartRay;
+        EndTrace = EndRay;
+        FoliageType = Type;
+        TraceRadius = inTraceRadius;
+    }
 }

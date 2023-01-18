@@ -21,4 +21,9 @@ public class ProceduralFoliageInstance
         return 0.0f;
     }
 
+    public float GetMaxRadius()
+    {
+        //TODO
+        return 0.0f;
+    }
 }

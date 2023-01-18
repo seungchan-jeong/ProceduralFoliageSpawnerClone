@@ -13,6 +13,22 @@ public class RandomStream
         _randomSeed = inRandomSeed;
     }
 
+    public RandomStream()
+    {
+        _randomStream = new System.Random(0);
+        _randomSeed = 0;
+    }
+
+    public void Initialize(int inSeed)
+    {
+        _randomSeed = inSeed;
+    }
+
+    public double Rand()
+    {
+        return _randomStream.NextDouble();
+    }
+    
     public int RandRange(int min, int max)
     {
         return _randomStream.Next(min, max + 1); //make it inclusive
@@ -27,7 +43,7 @@ public class RandomStream
     {
         return (float)_randomStream.NextDouble() * (max - min) + min;
     }
-
+    
     public int GetUnsignedInt()
     {
         //TODO
