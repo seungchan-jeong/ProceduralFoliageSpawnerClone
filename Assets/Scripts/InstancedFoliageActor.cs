@@ -81,13 +81,21 @@ public class InstancedFoliageActor
         return true;
     }
     
-    public static InstancedFoliageActor Get()
+    public static InstancedFoliageActor Get(bool bCreate, Vector3 position)
     {
-        return null;
+        return new InstancedFoliageActor();
     }
 
-    public void AddFoliageType(FoliageType foliageType)
+    public FoliageType AddFoliageType(FoliageType foliageType, out FoliageInfo info)
     {
-        
+        //TODO
+        info = new FoliageInfo();
+        return foliageType;
+    }
+
+    public static bool CheckCollisionWithWorld(FoliageType settings, FoliageInstance inst, Vector3 hitNormal, Vector3 hitLocation, GameObject hitComponent)
+    {
+        return true;
+        throw new System.NotImplementedException();
     }
 }

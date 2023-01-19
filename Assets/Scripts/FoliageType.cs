@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+
 [CreateAssetMenu(fileName = "ProceduralFoliageSpawner", menuName = "Scriptable Object/FoliageType")]
 public class FoliageType : ScriptableObject //TODO FoliageType, FoliageTypeObject 둘 다 SO 가 되는게 맞나?
 {
@@ -30,9 +32,14 @@ public class FoliageType : ScriptableObject //TODO FoliageType, FoliageTypeObjec
     public float _randomPitchAngle;
     
     public bool _randomYaw;
+    
+    public FloatRange _zOffset;
+
+    //TODO
+    //원래 FoliageType_Actor 가 가지고 있어야함.
+    public GameObject ActorClass;
 
 
-     
     [SerializeField] private int _numSteps;
     public int NumSteps
     {
@@ -45,6 +52,9 @@ public class FoliageType : ScriptableObject //TODO FoliageType, FoliageTypeObjec
             _numSteps = value;
         }
     }
+
+    public bool AlignToNormal { get; set; }
+    public object AlignMaxAngle { get; set; }
 
     public bool GetSpawnsInShade()
     {

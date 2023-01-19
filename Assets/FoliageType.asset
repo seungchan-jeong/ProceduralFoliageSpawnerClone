@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 951c0591bea8761479275f9e0980d6ab, type: 3}
   m_Name: FoliageType
   m_EditorClassIdentifier: 
-  _initialSeedDensity: 0.15
+  _initialSeedDensity: 0.03
   _shadeRadius: 0
   _collisionRadius: 0
   _maxAge: 0
@@ -20,4 +20,6 @@ MonoBehaviour:
   _maxInitialSeedOffset: 0
   _randomPitchAngle: 0
   _randomYaw: 0
+  ActorClass: {fileID: 4952593088415322581, guid: ef9ac34fbbf28b245b7ca7784516dea8,
+    type: 3}
   _numSteps: 0

@@ -15,22 +15,10 @@ public class ProceduralFoliageComponent : MonoBehaviour
     
     public void ResimulateProceduralFoliage()
     {
-        // Debug.Log("Resimulate");
-        
-        // ResimulateProceduralFoliage((List<DesiredFoliageInstance> DesiredFoliageInstances) =>
-        // {
-        //     FoliagePaintingGeometryFilter foliagePaintingGeometryFilter = new FoliagePaintingGeometryFilter(true, true);
-        //     EdModeFoliage.AddInstances(DesiredFoliageInstances, foliagePaintingGeometryFilter);
-        // });
-        
-        //Debug
         ResimulateProceduralFoliage((List<DesiredFoliageInstance> DesiredFoliageInstances) =>
         {
-	        foreach (DesiredFoliageInstance desiredFoliageInstance in DesiredFoliageInstances)
-	        {
-		        DebugDraw.DrawSphere(desiredFoliageInstance.StartTrace, 2.0f, Color.red, 6);
-		        // Debug.Log(desiredFoliageInstance.StartTrace);
-	        }
+            FoliagePaintingGeometryFilter foliagePaintingGeometryFilter = new FoliagePaintingGeometryFilter(true, true);
+            EdModeFoliage.AddInstances(DesiredFoliageInstances, foliagePaintingGeometryFilter, true);
         });
     }
 
@@ -228,7 +216,7 @@ public class ProceduralFoliageComponent : MonoBehaviour
         return false;
     }
 
-    private Vector3 GetBoundLeftNearCorner()
+    private Vector3 GetBoundLeftNearCorner() //CUSTOM
     {
 	    Bounds bounds = GetBounds();
 	    if (bounds == null)

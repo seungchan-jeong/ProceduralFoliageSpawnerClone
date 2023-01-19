@@ -24,6 +24,9 @@ public class RandomStream
         _randomSeed = inSeed;
     }
 
+    /// <summary>
+    /// [0,1]
+    /// </summary>
     public double Rand()
     {
         return _randomStream.NextDouble();

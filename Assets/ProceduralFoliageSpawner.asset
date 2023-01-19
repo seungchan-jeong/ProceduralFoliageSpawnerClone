@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _randomSeed: 1
   _tileSize: 100.01
-  _numUniqueTiles: 10
+  _numUniqueTiles: 5
   _minimumQuadTreeSize: 1.01
   _foliageTypeObjects:
   - {fileID: 11400000, guid: a947c3ca24c220443830b546e4907e1f, type: 2}

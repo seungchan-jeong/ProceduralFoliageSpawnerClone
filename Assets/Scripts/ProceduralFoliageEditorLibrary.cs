@@ -16,7 +16,7 @@ public class ProceduralFoliageEditorLibrary
                         new FoliagePaintingGeometryFilter(Comp.bAllowLandscape,
                             Comp.bAllowStaticMesh);
 
-                    EdModeFoliage.AddInstances(DesiredFoliageInstances, foliagePaintingGeometryFilter);
+                    EdModeFoliage.AddInstances(DesiredFoliageInstances, foliagePaintingGeometryFilter, true);
                 });
             }
         }

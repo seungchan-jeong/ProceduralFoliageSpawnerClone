@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ public class EdModeFoliage
     private const string NAME_AddFoliageInstances = "AddFoliageInstances";
 
     public static void AddInstances(List<DesiredFoliageInstance> DesiredInstances,
-        in FoliagePaintingGeometryFilter OverrideGeometryFilter)
+        in FoliagePaintingGeometryFilter OverrideGeometryFilter, bool InRebuildFoliageTree)
     {
         //Debug
         foreach (DesiredFoliageInstance desiredFoliageInstance in DesiredInstances)
@@ -24,12 +25,12 @@ public class EdModeFoliage
             FoliageType FoliageType = KeyValue.Key;
             List<DesiredFoliageInstance> Instances = KeyValue.Value;
 
-            AddInstancesImp(FoliageType, Instances, 1.0f, OverrideGeometryFilter);
+            AddInstancesImp(FoliageType, Instances, new List<int>() ,1.0f, OverrideGeometryFilter, InRebuildFoliageTree);
         }
     }
 
-    private static bool AddInstancesImp(FoliageType FoliageType, List<DesiredFoliageInstance> DesiredInstances,
-        in float Pressure, in FoliagePaintingGeometryFilter OverrideGeometryFilter)
+    private static bool AddInstancesImp(FoliageType FoliageType, List<DesiredFoliageInstance> DesiredInstances, List<int> ExistingInstanceBuckets,
+        in float Pressure, in FoliagePaintingGeometryFilter OverrideGeometryFilter, in bool InRebuildFoliageTree)
     {
         if (DesiredInstances.Count == 0)
         {
@@ -48,10 +49,11 @@ public class EdModeFoliage
         {
             foreach (PotentialInstance PotentialInst in Bucket)
             {
-                FoliageInstance Inst;
-                PotentialInst.PlaceInstance(/*TODO*/);
-
-                InstancedFoliageActor TargetIFA = InstancedFoliageActor.Get();
+                FoliageInstance Inst = new FoliageInstance();
+                PotentialInst.PlaceInstance(FoliageType, ref Inst, true);
+                
+                //TODO
+                // InstancedFoliageActor TargetIFA = InstancedFoliageActor.Get();
 
                 // List<FoliageType> UpdateTypes;
                 // if (!UpdatedTypesByIFA.TryGetValue(TargetIFA, out UpdateTypes))
@@ -69,23 +71,46 @@ public class EdModeFoliage
         }
 
         //TODO Spawn 하는 부분
-        //Spawn은 Debug Sphere로 우선 해보기 
         bool bPlacedInstances = false;
         for (int BucketIdx = 0; BucketIdx < NUM_INSTANCE_BUCKETS; BucketIdx++)
         {
             List<PotentialInstance> PotentialInstances = PotentialInstanceBuckets[BucketIdx];
+            float bucketFraction = (float)(BucketIdx + 1) / (float)NUM_INSTANCE_BUCKETS;
+
+            int bucketOffset = ExistingInstanceBuckets.Count != 0 ? ExistingInstanceBuckets[BucketIdx] : 0 ;
+            int AdditionalInstances =
+                Mathf.Clamp(
+                    Mathf.RoundToInt(bucketFraction * (float)(PotentialInstances.Count - bucketOffset) * Pressure), 
+                    0,
+                    PotentialInstances.Count);
+
+            List<FoliageInstance> PlacedInstances = new List<FoliageInstance>(AdditionalInstances);
+
+            for (int i = 0; i < AdditionalInstances; i++)
+            {
+                PotentialInstance potentialInstance = PotentialInstances[i];
+                FoliageInstance inst = new FoliageInstance();
+                if (potentialInstance.PlaceInstance(FoliageType, ref inst))
+                {
+                    //Inst.ProceduralGuid = PotentialInstance.DesiredInstance.ProceduralGuid;
+                    inst.HitComponent = potentialInstance.HitComponent;
+                    PlacedInstances.Add(inst);
+                    bPlacedInstances = true;
+                }
+            }
+            
+            SpawnFoliageInstance(FoliageType, PlacedInstances, InRebuildFoliageTree);
+            
+            // Debug
             foreach (PotentialInstance PotentialInstance in PotentialInstances)
             {
                 DesiredFoliageInstance DesiredInstance = PotentialInstance.DesiredInstance;
-
+            
                 //Debug
                 DebugDraw.DrawSphere(PotentialInstance.HitLocation, 2.0f, Color.red, 6);
             }
-            
-            // SpawnFoliageInstance();
         }
-
-        return true;
+        return bPlacedInstances;
     }
 
     private static void CalculatePotentialInstances_ThreadSafe(FoliageType Settings,
@@ -127,8 +152,42 @@ public class EdModeFoliage
     private static void SpawnFoliageInstance(FoliageType Settings, List<FoliageInstance> PlacedInstances,
         bool InRebuildFoliageTree)
     {
+        Dictionary<InstancedFoliageActor, List<FoliageInstance>> PerIFAPlacedInstances = new Dictionary<InstancedFoliageActor, List<FoliageInstance>>();
+        bool bSpawnInCurrentLevel = true;
+        foreach (FoliageInstance PlacedInstance in PlacedInstances)
+        {
+            InstancedFoliageActor IFA = InstancedFoliageActor.Get(true, PlacedInstance.Location);
+            if (IFA != null)
+            {
+                if (PerIFAPlacedInstances.TryGetValue(IFA, out List<FoliageInstance> instances))
+                {
+                    instances.Add(PlacedInstance);
+                }
+                else
+                {
+                    PerIFAPlacedInstances[IFA] = new List<FoliageInstance>(){ PlacedInstance };
+                }
+            }
+        }
 
+        foreach (var PlacedLevelInstances in PerIFAPlacedInstances)
+        {
+            InstancedFoliageActor IFA = PlacedLevelInstances.Key;
+
+            CurrentFoliageTraceBrushAffectedIFAs.Add(IFA);
+
+            FoliageInfo Info = null;
+            FoliageType FoliageSettings = IFA.AddFoliageType(Settings, out Info);
+
+            Info.AddInstances(FoliageSettings, PlacedLevelInstances.Value);
+            if (InRebuildFoliageTree)
+            {
+                Info.Refresh(true, false);
+            }
+        }
     }
+    
+    static HashSet<InstancedFoliageActor> CurrentFoliageTraceBrushAffectedIFAs = new HashSet<InstancedFoliageActor>();
 
     private static bool CheckLocationForPotentialInstance_ThreadSafe(FoliageType Settings, Vector3 Location, Vector3 Normal)
     {
