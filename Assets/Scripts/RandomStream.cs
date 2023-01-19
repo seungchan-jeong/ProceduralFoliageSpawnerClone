@@ -9,8 +9,7 @@ public class RandomStream
 
     public RandomStream(int inRandomSeed)
     {
-        _randomStream = new System.Random(inRandomSeed);
-        _randomSeed = inRandomSeed;
+        Initialize(inRandomSeed);
     }
 
     public RandomStream()
@@ -21,6 +20,7 @@ public class RandomStream
 
     public void Initialize(int inSeed)
     {
+        _randomStream = new System.Random(inSeed);
         _randomSeed = inSeed;
     }
 
