@@ -118,7 +118,7 @@ public class ProceduralFoliageComponent : MonoBehaviour
 	    if (_proceduralFoliageSpawner != null)
 	    {
 		    float tileSize = _proceduralFoliageSpawner._tileSize;
-		    Vector3 worldPosition = transform.position;
+		    Vector3 worldPosition = GetBoundLeftNearCorner();
 		    Bounds volumeBound = GetBounds();
 		    Vector3 volumeLocation = volumeBound.center;
 		    float volumeMaxExtent = Mathf.Max(volumeBound.extents.x, volumeBound.extents.z);
@@ -226,6 +226,17 @@ public class ProceduralFoliageComponent : MonoBehaviour
 	    }
 #endif
         return false;
+    }
+
+    private Vector3 GetBoundLeftNearCorner()
+    {
+	    Bounds bounds = GetBounds();
+	    if (bounds == null)
+	    {
+		    Debug.LogError("Bound is null");
+	    }
+
+	    return bounds.min + Vector3.up * bounds.extents.y;
     }
 
     private ProceduralFoliageVolume GetBoundsBodyInstance()
