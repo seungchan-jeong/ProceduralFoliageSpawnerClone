@@ -20,6 +20,6 @@ MonoBehaviour:
   _maxInitialSeedOffset: 0
   _randomPitchAngle: 0
   _randomYaw: 0
-  ActorClass: {fileID: 4952593088415322581, guid: ef9ac34fbbf28b245b7ca7784516dea8,
+  ActorClass: {fileID: 1746199949866303406, guid: 890d4927fe818784c9643cdcff92ba21,
     type: 3}
   _numSteps: 0
