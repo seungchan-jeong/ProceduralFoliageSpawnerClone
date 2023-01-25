@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ProceduralFoliageSpawner
   m_EditorClassIdentifier: 
   _randomSeed: 1
-  _tileSize: 100.01
+  _tileSize: 100.1
   _numUniqueTiles: 5
   _minimumQuadTreeSize: 1.01
   _foliageTypeObjects:

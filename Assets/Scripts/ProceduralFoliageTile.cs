@@ -42,7 +42,7 @@ public class ProceduralFoliageTile
         _randomStream = new RandomStream(inRandomSeed); //TODO thread-safe 하지 않을 듯. 확인 필요.
         _foliageSpawner = inFoliageSpawner;
         _simulationStep = 0;
-        _broadphase = new ProceduralFoliageBroadphase();
+        _broadphase = new ProceduralFoliageBroadphase(inFoliageSpawner._tileSize, inFoliageSpawner._minimumQuadTreeSize);
         _instancesArray ??= new List<ProceduralFoliageInstance>();
         _instancesSet ??= new HashSet<ProceduralFoliageInstance>();
     }
@@ -322,33 +322,34 @@ public class ProceduralFoliageTile
         FlushPendingRemovals();
     }
 
-    private void GetInstancesInAABB(Bounds outerLocalAABB, List<ProceduralFoliageInstance> OutInstances)
+    private void GetInstancesInAABB(Bounds LocalAABB, List<ProceduralFoliageInstance> OutInstances, bool bFullyContainedOnly = true)
     {
-        OutInstances.AddRange(_instancesArray);
-        return;
+        List<ProceduralFoliageInstance> instancesInAABB = new List<ProceduralFoliageInstance>();
+        _broadphase.GetInstancesInBox(LocalAABB, instancesInAABB);
         
-        //TODO 
-        // TArray<FProceduralFoliageInstance*> InstancesInAABB;
-        // Broadphase.GetInstancesInBox(LocalAABB, InstancesInAABB);
-        //
-        // OutInstances.Reserve(OutInstances.Num() + InstancesInAABB.Num());
-        // for (FProceduralFoliageInstance* Inst : InstancesInAABB)
-        // {
-        //     const float Rad = Inst->GetMaxRadius();
-        //     const FVector& Location = Inst->Location;
-        //
-        //     if (!bFullyContainedOnly || (Location.X - Rad >= LocalAABB.Min.X && Location.X + Rad <= LocalAABB.Max.X && Location.Y - Rad >= LocalAABB.Min.Y && Location.Y + Rad <= LocalAABB.Max.Y))
-        //     {
-        //         OutInstances.Add(Inst);
-        //     }
-        // }
-        //
-        // // Sort the instances by location.
-        // // This protects us from any future modifications made to the broadphase that would impact the order in which instances are located in the AABB.
-        // OutInstances.Sort([](const FProceduralFoliageInstance& A, const FProceduralFoliageInstance& B)
-        // {
-        //     return (B.Location.X == A.Location.X) ? (B.Location.Y > A.Location.Y) : (B.Location.X > A.Location.X);
-        // });
+        OutInstances.Capacity = OutInstances.Count + instancesInAABB.Count;
+        foreach (ProceduralFoliageInstance inst in instancesInAABB)
+        {
+            float rad = inst.GetMaxRadius();
+            Vector3 location = inst.Location;
+        
+            if (!bFullyContainedOnly ||
+                (location.x - rad >= LocalAABB.min.x && location.x + rad <= LocalAABB.max.x && location.y - rad >= LocalAABB.min.y && location.y + rad <= LocalAABB.max.y))
+            {
+                OutInstances.Add(inst);
+            }
+        }
+        
+        OutInstances.Sort((left, right) => //TODO 언리얼이랑 결과 같은지 확인 필요
+        {
+            return Mathf.Abs(left.Location.x - right.Location.x) < Mathf.Epsilon ? 
+                left.Location.y.CompareTo(right.Location.y) : 
+                left.Location.x.CompareTo(right.Location.x);
+        });
+        
+        // Debug
+        // OutInstances.AddRange(_instancesArray);
+        // return;
     }
 
     public void ExtractDesiredInstances(List<DesiredFoliageInstance> OutInstances, Matrix4x4 WorldTM, Vector3 volumeLocation, float volumeMaxExtent, float HalfHeight, ProceduralFoliageVolume VolumeBodyInstance, bool bEmptyTileInfo)
